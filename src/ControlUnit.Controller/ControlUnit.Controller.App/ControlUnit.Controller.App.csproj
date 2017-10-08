@@ -131,6 +131,12 @@
       <Version>5.4.0</Version>
     </PackageReference>
   </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\ControlUnit.Controller.Core\ControlUnit.Controller.Core.csproj">
+      <Project>{66744268-64ae-4bfa-bfe4-e59e5fab5056}</Project>
+      <Name>ControlUnit.Controller.Core</Name>
+    </ProjectReference>
+  </ItemGroup>
   <PropertyGroup Condition=" '$(VisualStudioVersion)' == '' or '$(VisualStudioVersion)' &lt; '14.0' ">
     <VisualStudioVersion>14.0</VisualStudioVersion>
   </PropertyGroup>
