@@ -1,0 +1,5 @@
+{
+    "sketch": "Main.ino",
+    "board": "arduino:nrf52:primo",
+    "output": "bin"
+}
