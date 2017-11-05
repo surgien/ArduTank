@@ -1,6 +1,15 @@
-﻿using System;
+﻿using Autofac;
+using Autofac.Core;
+using ControlUnit.Controller.App.Services;
+using ControlUnit.Controller.App.Views;
+using ControlUnit.Controller.Core;
+using ControlUnit.Controller.Core.Services;
+using ControlUnit.Controller.Core.ViewModels;
+using GalaSoft.MvvmLight.Views;
+using System;
 using Windows.ApplicationModel;
 using Windows.ApplicationModel.Activation;
+using Windows.UI.Core;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Navigation;
@@ -22,6 +31,23 @@ namespace ControlUnit.Controller.App
             this.Suspending += OnSuspending;
         }
 
+        private void App_BackRequested(object sender, BackRequestedEventArgs e)
+        {
+            Frame rootFrame = Window.Current.Content as Frame;
+            if (rootFrame == null)
+                return;
+
+            // Navigate back if possible, and if the event has not 
+            // already been handled .
+            if (rootFrame.CanGoBack && e.Handled == false)
+            {
+                e.Handled = true;
+                rootFrame.GoBack();
+            }
+        }
+
+        public static IContainer Container { get; private set; }
+
         /// <summary>
         /// Invoked when the application is launched normally by the end user.  Other entry points
         /// will be used such as when the application is launched to open a specific file.
@@ -29,7 +55,20 @@ namespace ControlUnit.Controller.App
         /// <param name="e">Details about the launch request and process.</param>
         protected override void OnLaunched(LaunchActivatedEventArgs e)
         {
-            Frame rootFrame = Window.Current.Content as Frame;
+            Frame rootFrame = Window.Current.Content as Frame;  
+
+            var builder = new ContainerBuilder();
+            var nav = new GalaSoft.MvvmLight.Views.NavigationService();
+
+            nav.Configure(nameof(DeviceDiscoveryViewModel), typeof(DeviceDiscoveryPage));
+            nav.Configure(nameof(ControllerViewModel), typeof(ControllerPage));
+
+            builder.RegisterInstance<INavigationService>(nav);
+            builder.Register(c => new RemoteCommunicationService<IControllerService>(new RemoteCommunicationFormatProvider()));
+            builder.RegisterType<BluetoothConnectionService>().As<IBluetoothConnectionService>();
+            Container = builder.Build();
+
+            SystemNavigationManager.GetForCurrentView().BackRequested += App_BackRequested;
 
             // Do not repeat app initialization when the Window already has content,
             // just ensure that the window is active

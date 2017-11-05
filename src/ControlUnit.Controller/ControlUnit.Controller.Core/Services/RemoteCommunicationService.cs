@@ -1,10 +1,12 @@
 ﻿using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
+using System.Threading.Tasks;
 
-namespace ControlUnit.Controller.Core
+namespace ControlUnit.Controller.Core.Services
 {
     /// <summary>
     /// Defines how the datagrams looks like
@@ -28,17 +30,20 @@ namespace ControlUnit.Controller.Core
     public class RemoteCommunicationService<TServiceInterface>
     {
         private IRemoteCommunicationFormatProvider _formatProvider;
+        private IBluetoothConnectionService _connection;
 
         public RemoteCommunicationService(IRemoteCommunicationFormatProvider formatProvider)
         {
             _formatProvider = formatProvider;
+
+            //TODO: Event verdrahten, und Mapping für Request/Response mit GUids?! und ENumtypen mb
         }
 
         /// <summary>
         /// Calls the specified procedure on the target endpoint
         /// </summary>
         /// <param name="proc">The target remote procedure</param>
-        public void CallRemoteProcedure(Expression<Action<IControllerService>> proc)
+        public async Task CallRemoteProcedureAsync(Expression<Action<IControllerService>> proc)
         {
             var expr = proc.Body as MethodCallExpression;
             var method = expr.Method;
@@ -52,6 +57,7 @@ namespace ControlUnit.Controller.Core
 
             var requestObject = _formatProvider.BuildRequestObject(method, parameters);
             var requestJson = JsonConvert.SerializeObject(requestObject);
+            await _connection.TransmitData(ToBytes(requestJson));
         }
 
         /// <summary>
@@ -64,5 +70,19 @@ namespace ControlUnit.Controller.Core
         {
             throw new NotImplementedException();
         }
+
+        /// <summary>
+        /// Convert json-string to byte array
+        /// </summary>
+        /// <param name="jsonString"></param>
+        /// <returns></returns>
+        public byte[] ToBytes(string jsonString) => jsonString.ToCharArray().Select(c => Convert.ToByte(c)).ToArray();
+
+        /// <summary>
+        /// Converts byte array back to json-string
+        /// </summary>
+        /// <param name="data"></param>
+        /// <returns></returns>
+        public string ToString(byte[] data) => new string(data.Select(c => (char)c).ToArray());
     }
 }
