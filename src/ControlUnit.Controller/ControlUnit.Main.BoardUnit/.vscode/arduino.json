@@ -1,5 +1,6 @@
 {
     "sketch": "Main.ino",
     "board": "arduino:nrf52:primo",
-    "output": "bin"
+    "output": "bin",
+    "port": "COM4"
 }

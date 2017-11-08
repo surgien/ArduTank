@@ -3,12 +3,13 @@
         {
             "name": "Win32",
             "includePath": [
-                "C:\\Users\\steph\\AppData\\Local\\Arduino15\\packages\\arduino\\hardware\\nrf52\\1.0.1\\cores\\arduino"
+                "C:\\Users\\steph.SURFACE-STEPHAN\\AppData\\Local\\Arduino15\\packages\\arduino\\hardware\\nrf52\\1.0.2\\cores\\arduino",
+                "${workspaceRoot}"
             ],
             "browse": {
                 "limitSymbolsToIncludedHeaders": false,
                 "path": [
-                    "C:\\Users\\steph\\AppData\\Local\\Arduino15\\packages\\arduino\\hardware\\nrf52\\1.0.1\\cores\\arduino",
+                    "C:\\Users\\steph.SURFACE-STEPHAN\\AppData\\Local\\Arduino15\\packages\\arduino\\hardware\\nrf52\\1.0.2\\cores\\arduino",
                     "${workspaceRoot}"
                 ]
             },
