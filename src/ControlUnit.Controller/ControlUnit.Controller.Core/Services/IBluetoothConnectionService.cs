@@ -31,6 +31,7 @@ namespace ControlUnit.Controller.Core.Services
 
     public enum ConnectionState
     {
-        Connected
+        Connected,
+        Disconnected
     }
 }

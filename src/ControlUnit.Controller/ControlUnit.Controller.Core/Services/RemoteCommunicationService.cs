@@ -19,7 +19,7 @@ namespace ControlUnit.Controller.Core.Services
         /// <param name="method"></param>
         /// <param name="parameters"></param>
         /// <returns></returns>
-        object BuildRequestObject(MethodInfo method, Dictionary<string, ConstantExpression> parameters);
+        object BuildRequestObject(MethodInfo method, Dictionary<string, object> parameters);
     }
 
     /// <summary>
@@ -32,10 +32,10 @@ namespace ControlUnit.Controller.Core.Services
         private IRemoteCommunicationFormatProvider _formatProvider;
         private IBluetoothConnectionService _connection;
 
-        public RemoteCommunicationService(IRemoteCommunicationFormatProvider formatProvider)
+        public RemoteCommunicationService(IRemoteCommunicationFormatProvider formatProvider, IBluetoothConnectionService srv)
         {
             _formatProvider = formatProvider;
-
+            _connection = srv;
             //TODO: Event verdrahten, und Mapping für Request/Response mit GUids?! und ENumtypen mb
         }
 
@@ -48,16 +48,36 @@ namespace ControlUnit.Controller.Core.Services
             var expr = proc.Body as MethodCallExpression;
             var method = expr.Method;
             var paramInfos = expr.Method.GetParameters();
-            var parameters = new Dictionary<string, ConstantExpression>();
+            var parameters = new Dictionary<string, object>();
 
             for (int i = 0; i < paramInfos.Length; i++)
             {
-                parameters.Add(paramInfos[i].Name, (ConstantExpression)expr.Arguments[i]);
+                switch (expr.Arguments[i])
+                {
+                    case ConstantExpression constantExpr:
+                        parameters.Add(paramInfos[i].Name, constantExpr.Value);
+                        break;
+                    case MemberExpression memberExpr:
+
+                        var objectMember = Expression.Convert(memberExpr, typeof(object));
+                        var getterLambda = Expression.Lambda<Func<object>>(objectMember);
+                        var getter = getterLambda.Compile();
+                        var value = getter();
+
+                        parameters.Add(paramInfos[i].Name, value);
+                        break;
+                }
             }
 
             var requestObject = _formatProvider.BuildRequestObject(method, parameters);
             var requestJson = JsonConvert.SerializeObject(requestObject);
-            await _connection.TransmitData(ToBytes(requestJson));
+
+
+            var x = Guid.NewGuid().ToString().Count();
+
+            await _connection.TransmitData(ToBytes("12345678912345678912"));
+
+            //await _connection.TransmitData(ToBytes(requestJson));
         }
 
         /// <summary>

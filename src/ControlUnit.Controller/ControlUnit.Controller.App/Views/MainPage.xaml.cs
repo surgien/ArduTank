@@ -55,6 +55,7 @@ namespace ControlUnit.Controller.App
 
             var contentPage = e.Content as Page;
 
+
             commandBar.PrimaryCommands.Clear();
             commandBar.SecondaryCommands.Clear();
 
@@ -72,6 +73,7 @@ namespace ControlUnit.Controller.App
                 if (item.Tag as string == contentPage.DataContext.GetType().Name && HamburgerMenu.SelectedItem != item)
                 {
                     HamburgerMenu.SelectedItem = item;
+                    PageHeaderTextBlock.Text = item.Label;
                 }
             }
         }

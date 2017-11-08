@@ -59,13 +59,14 @@ namespace ControlUnit.Controller.App
 
             var builder = new ContainerBuilder();
             var nav = new GalaSoft.MvvmLight.Views.NavigationService();
+            var bleSrv = new BluetoothConnectionService();
 
             nav.Configure(nameof(DeviceDiscoveryViewModel), typeof(DeviceDiscoveryPage));
             nav.Configure(nameof(ControllerViewModel), typeof(ControllerPage));
 
             builder.RegisterInstance<INavigationService>(nav);
-            builder.Register(c => new RemoteCommunicationService<IControllerService>(new RemoteCommunicationFormatProvider()));
-            builder.RegisterType<BluetoothConnectionService>().As<IBluetoothConnectionService>();
+            builder.Register(c => new RemoteCommunicationService<IControllerService>(new RemoteCommunicationFormatProvider(), bleSrv));
+            builder.RegisterInstance<IBluetoothConnectionService>(bleSrv);
             Container = builder.Build();
 
             SystemNavigationManager.GetForCurrentView().BackRequested += App_BackRequested;

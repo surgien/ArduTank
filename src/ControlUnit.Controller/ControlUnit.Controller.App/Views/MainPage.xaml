@@ -101,7 +101,7 @@
                 </Border>
                 <CommandBar x:Name="commandBar" Background="{StaticResource CommandBarBackgroundBrush}">
                     <CommandBar.Content>
-                        <TextBlock HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="24" Text="Teeeeest" Margin="12,14"/>
+                        <TextBlock x:Name="PageHeaderTextBlock" HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="24" Text="Header" Margin="12,7"/>
                     </CommandBar.Content>
                 </CommandBar>
                 <Grid Grid.Row="1" >

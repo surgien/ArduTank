@@ -9,6 +9,9 @@ using System.Collections.ObjectModel;
 using Windows.Devices.Enumeration;
 using Windows.Devices.Bluetooth.GenericAttributeProfile;
 using Windows.Devices.Enumeration.Pnp;
+using Windows.Devices.SerialCommunication;
+using Windows.Storage.Streams;
+using System.Runtime.InteropServices.WindowsRuntime;
 
 namespace ControlUnit.Controller.App.Services
 {
@@ -18,7 +21,6 @@ namespace ControlUnit.Controller.App.Services
         private Guid SERVICE_UUID = new Guid("{6E400001-B5A3-F393-E0A9-E50E24DCCA9E}");
         private Guid TX_CHARACTERISTIC_UUID = new Guid("{6E400002-B5A3-F393-E0A9-E50E24DCCA9E}");
         private Guid RX_CHARACTERISTIC_UUID = new Guid("{6E400003-B5A3-F393-E0A9-E50E24DCCA9E}");
-        private string _deviceContainerId;
         private GattDeviceService _service;
         private GattCharacteristic _txCharacteristic;
         private GattCharacteristic _rxCharacteristic;
@@ -34,7 +36,6 @@ namespace ControlUnit.Controller.App.Services
 
         public async Task<ConnectionState> ConnectToDeviceAsync(BluetoothDevice selectedDevice)
         {
-            _deviceContainerId = selectedDevice.ContainerId;
             _service = await GattDeviceService.FromIdAsync(selectedDevice.Id);
             if (_service != null)
             {
@@ -77,7 +78,7 @@ namespace ControlUnit.Controller.App.Services
             else
             {
                 //throw new Exception("Something Wrong in 'InitializeServiceAsync' ");
-                return ConnectionState.Connected;//WRONG!
+                return ConnectionState.Disconnected;
             }
         }
 
@@ -97,6 +98,19 @@ namespace ControlUnit.Controller.App.Services
         {
             var connectedProperty = args.Properties["System.Devices.Connected"];
             bool isConnected = false;
+
+            foreach (var prop in args.Properties)
+            {
+                var xx = prop;
+            }
+
+            var _deviceContainerId = "BLABLALABLAB";
+
+            if (!args.Id.ToString().StartsWith("{56")) //{56bd5956-4fd5-5829-af2f-c810613e82a4}
+            {
+                var xxxx = 23;
+            }
+
             if ((_deviceContainerId == args.Id) && Boolean.TryParse(connectedProperty.ToString(), out isConnected) &&
                 isConnected)
             {
@@ -112,34 +126,66 @@ namespace ControlUnit.Controller.App.Services
                     _watcher = null;
                 }
 
-                // Notifying subscribers of connection state updates
-                //if (DeviceConnectionUpdated != null)
-                //{
-                //    DeviceConnectionUpdated(isConnected);
-                //}
+                //Notifying subscribers of connection state updates
+                if (DeviceConnectionChanged != null)
+                {
+                    DeviceConnectionChanged(this, new DeviceConnectionChangedEventArgs() { IsConnected = status == GattCommunicationStatus.Success });
+                }
             }
         }
 
+        /// <summary>
+        /// Invoked when App receives data from device.
+        /// </summary>
+        /// <param name="sender">The characteristic object whose value is received.</param>
+        /// <param name="args">The new characteristic value sent by the device.</param>
         private void RxCharacteristic_ValueChanged(GattCharacteristic sender, GattValueChangedEventArgs args)
         {
-            throw new NotImplementedException();
+            var data = new byte[args.CharacteristicValue.Length];
+
+            DataReader.FromBuffer(args.CharacteristicValue).ReadBytes(data);
+
+            // Process the raw data received from the device.
+            var astring = UART_Data_Converter.RX(data);
+
+            var text = astring;
+
+            //EVENT DAS ETWAS EMPFANGEN WURDE
+        }
+
+        public async Task TransmitData(byte[] data)
+        {
+            // try-catch block protects us from the race where the device disconnects
+            // just after we've determined that it is connected.
+            try
+            {
+                if (_txCharacteristic != null)
+                {
+                    var buffer = data.AsBuffer();
+                    var result = await _txCharacteristic.WriteValueAsync(buffer, GattWriteOption.WriteWithoutResponse);
+                }
+            }
+            catch (Exception) { }
         }
 
         public async Task<IEnumerable<BluetoothDevice>> GetAllDevicesAsync()
         {
             //TODO FAKE:
-            return new List<BluetoothDevice>() { new BluetoothDevice("Test", "IDAAA", "CID") };
+            //return new List<BluetoothDevice>() { new BluetoothDevice("Test", "IDAAA", "CID") };
+            var devInfos = GattDeviceService.GetDeviceSelectorFromUuid(SERVICE_UUID);
+            var devices = await DeviceInformation.FindAllAsync(devInfos, new string[] { "System.Devices.ContainerId", "System.Devices.AepService.AepId", "System.Devices.AepService.ServiceClassId" }, DeviceInformationKind.AssociationEndpointContainer);
+            var parsedDevices = new List<BluetoothDevice>();
 
-            var devices = await DeviceInformation.FindAllAsync(
-                GattDeviceService.GetDeviceSelectorFromUuid(SERVICE_UUID),
-                new string[] { "System.Devices.ContainerId" });
+            foreach (var d in devices)
+            {
+                var srv = await GattDeviceService.FromIdAsync(d.Id);
+                var dev = await DeviceInformation.CreateFromIdAsync(srv.Session.DeviceId.Id);
 
-            return devices.Select(dev => new BluetoothDevice("name", dev.Id, (string)dev.Properties["System.Devices.ContainerId"])).ToList();
-        }
+                parsedDevices.Add(new BluetoothDevice(dev.Name, d.Id));
+            }
 
-        public Task TransmitData(byte[] data)
-        {
-            throw new NotImplementedException();
+
+            return parsedDevices;
         }
     }
 }

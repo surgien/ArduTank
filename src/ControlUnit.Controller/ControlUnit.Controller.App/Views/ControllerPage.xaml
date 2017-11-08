@@ -6,9 +6,17 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:controls="using:Microsoft.Toolkit.Uwp.UI.Controls"
     xmlns:local="using:ControlUnit.Controller.App.Controls"
+    xmlns:converter="using:ControlUnit.Controller.App.Converter"
     mc:Ignorable="d">
+    <Page.Resources>
+        <converter:DalayConverter x:Key="DalayConverterLeft"/>
+        <converter:DalayConverter x:Key="DalayConverterMain"/>
+        <converter:DalayConverter x:Key="DalayConverterRight"/>
+    </Page.Resources>
     <Page.BottomAppBar>
         <CommandBar>
+            <AppBarButton Icon="Add" Label="Beschleunigen" Command="{Binding AccelerateCommand}"/>
+            <AppBarButton Icon="Remove" Label="Bremsen" Command="{Binding BreakCommand}"/>
             <AppBarToggleButton IsChecked="{Binding LockedTurn, Mode=TwoWay}" Icon="ClearSelection" Label="Lenkung einrasten" />
         </CommandBar>
     </Page.BottomAppBar>
@@ -20,9 +28,9 @@
         <RepeatButton Content="RepeatButton" HorizontalAlignment="Left" Margin="132,395,0,0" VerticalAlignment="Top" RenderTransformOrigin="0.812,0.417"/>-->
         <Grid>
             <Grid.RowDefinitions>
-                <RowDefinition Height="6*"/>
-                <RowDefinition Height="3*"/>
-                <RowDefinition/>
+                <RowDefinition Height="40*"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="70*"/>
             </Grid.RowDefinitions>
             <controls:RadialGauge 
                   Value="{Binding OverallTrackVelocity, Mode=TwoWay}"
@@ -30,7 +38,7 @@
                   Maximum="100"
                   StepSize="1"
                   IsInteractive="True"
-                  TickSpacing="20"
+                  TickSpacing="25"
                   ScaleWidth="26"
                   MinAngle="210"
                   MaxAngle="150"
@@ -39,30 +47,60 @@
                   ScaleTickBrush="{ThemeResource ApplicationPageBackgroundThemeBrush}"
                   UnitBrush="Black"
                   ValueBrush="Black" 
-                  NeedleWidth="5" 
+                  NeedleWidth="6" 
                   TickLength="18" />
 
-            <StackPanel Grid.Row="1" HorizontalAlignment="Center" VerticalAlignment="Stretch" Orientation="Horizontal" Margin="113,5,112,5" Width="135">
-                <Slider TickPlacement="BottomRight"
-                        TickFrequency="2" 
-                        StepFrequency="5" Maximum="100" Value="{Binding LeftTrackVelocity, Mode=TwoWay}" Orientation="Vertical" PointerCaptureLost="Slider_PointerCaptureLost"/>
-                <Slider TickPlacement="BottomRight" 
-                        TickFrequency="2" 
-                        Maximum="100" Value="{Binding OverallTrackVelocity, Mode=TwoWay}" Orientation="Vertical" RenderTransformOrigin="0.5,0.5" Padding="3,0,0,0">
-                    <!--<Slider.RenderTransform>
-                        <CompositeTransform ScaleX="2.5"/>
-                    </Slider.RenderTransform>-->
-                </Slider>
-                <Slider TickPlacement="BottomRight" 
-                        TickFrequency="2" 
-                        StepFrequency="5" Maximum="100" Value="{Binding RightTrackVelocity, Mode=TwoWay}" Orientation="Vertical" PointerCaptureLost="Slider_PointerCaptureLost"/>
+            <StackPanel Margin="0,10" Orientation="Horizontal" HorizontalAlignment="Center" Grid.Row="1">
+                <TextBox Margin="5" Text="{Binding LeftTrackVelocity, Mode=TwoWay}" HorizontalAlignment="Center" TextAlignment="Center" InputScope="Digits"/>
+                <TextBox Margin="1" Text="{Binding OverallTrackVelocity, Mode=TwoWay}" HorizontalAlignment="Center" TextAlignment="Center" InputScope="Digits"/>
+                <TextBox Margin="5" Text="{Binding RightTrackVelocity, Mode=TwoWay}" HorizontalAlignment="Center" TextAlignment="Center" InputScope="Digits"/>
             </StackPanel>
 
-            <StackPanel Margin="77,10" Orientation="Horizontal" HorizontalAlignment="Center" Grid.Row="2">
-                <TextBox Margin="5" Text="{Binding LeftTrackVelocity, Mode=TwoWay}"/>
-                <TextBox Margin="1" Text="{Binding OverallTrackVelocity, Mode=TwoWay}"/>
-                <TextBox Margin="5" Text="{Binding RightTrackVelocity, Mode=TwoWay}"/>
-            </StackPanel>
+            <Grid Grid.Row="2" HorizontalAlignment="Center" VerticalAlignment="Stretch" Width="200">
+                <Grid.RowDefinitions>
+                    <RowDefinition/>
+                    <RowDefinition Height="0.5*"/>
+                </Grid.RowDefinitions>
+                <Grid>
+                    <Slider TickPlacement="Outside" HorizontalAlignment="Left"
+                        TickFrequency="10" Maximum="100" Value="{Binding LeftTrackVelocity, Mode=TwoWay, Converter={StaticResource DalayConverterLeft}}" Orientation="Vertical" PointerCaptureLost="Slider_PointerCaptureLost" StepFrequency="5"/>
+
+
+                    <Slider HorizontalAlignment="Center" TickPlacement="Outside" 
+                        TickFrequency="10" 
+                        Maximum="100" Value="{Binding OverallTrackVelocity, Mode=TwoWay, Converter={StaticResource DalayConverterMain}}" Orientation="Vertical" RenderTransformOrigin="0.5,0.5" Padding="3,0,0,0">
+                        <!--<Slider.RenderTransform>
+                        <CompositeTransform ScaleX="2.5"/>
+                    </Slider.RenderTransform>-->
+                    </Slider>
+                    <Slider HorizontalAlignment="Right" Grid.Row="0"  TickPlacement="Outside" 
+                        TickFrequency="10" Maximum="100" Value="{Binding RightTrackVelocity, Mode=TwoWay, Converter={StaticResource DalayConverterRight}}" Orientation="Vertical" PointerCaptureLost="Slider_PointerCaptureLost" StepFrequency="5"/>
+
+                </Grid>
+
+                <Grid Grid.Row="1">
+                    <Canvas x:Name="canvas" Height="5" VerticalAlignment="Top">
+                        <Line StrokeThickness="1" Stroke="{ThemeResource AccentButtonBackgroundPressed}" X1="0" X2="{Binding ActualWidth, ElementName=canvas, Mode=OneWay}" HorizontalAlignment="Stretch"/>
+                    </Canvas>
+
+                    <Slider
+                        HorizontalAlignment="Left"
+                        TickPlacement="Outside" 
+                        TickFrequency="10" Maximum="0" Value="{Binding LeftTrackVelocity, Mode=TwoWay, Converter={StaticResource DalayConverterLeft}}" Orientation="Vertical" PointerCaptureLost="Slider_PointerCaptureLost" Minimum="-50" StepFrequency="5"/>
+
+                    <Slider HorizontalAlignment="Center" TickPlacement="Outside" 
+                        TickFrequency="10" 
+                        Maximum="0" Minimum="-50" Value="{Binding OverallTrackVelocity, Mode=TwoWay, Converter={StaticResource DalayConverterMain}}" Orientation="Vertical" RenderTransformOrigin="0.5,0.5" Padding="3,0,0,0">
+                    </Slider>
+
+
+                    <Slider HorizontalAlignment="Right"  TickPlacement="Outside" 
+                        TickFrequency="10" Maximum="0" Value="{Binding RightTrackVelocity, Mode=TwoWay, Converter={StaticResource DalayConverterRight}}" Orientation="Vertical" PointerCaptureLost="Slider_PointerCaptureLost" Minimum="-50" StepFrequency="5"/>
+
+                </Grid>
+            </Grid>
+
+
         </Grid>
         <!--<Slider Margin="3,358,257,0" VerticalAlignment="Top" Orientation="Vertical" Height="272"/>
         <Slider Margin="3,358,257,0" VerticalAlignment="Top" Orientation="Vertical" Height="272"/>

@@ -11,13 +11,13 @@ namespace ControlUnit.Controller.Core.Services
     /// </summary>
     public class RemoteCommunicationFormatProvider : IRemoteCommunicationFormatProvider
     {
-        public object BuildRequestObject(MethodInfo method, Dictionary<string, ConstantExpression> parameters)
+        public object BuildRequestObject(MethodInfo method, Dictionary<string, object> parameters)
         {
             var serializableParams = new List<string>();
 
             foreach (var param in parameters)
             {
-                serializableParams.Add($"{param.Key}: {param.Value.Value}");
+                serializableParams.Add($"{param.Key}: {param.Value}");
             }
 
             return new { Method = method.Name, Params = serializableParams };

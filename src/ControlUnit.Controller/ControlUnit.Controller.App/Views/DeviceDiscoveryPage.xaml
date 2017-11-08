@@ -8,7 +8,7 @@
     mc:Ignorable="d">
     <Page.TopAppBar>
         <CommandBar>
-            <AppBarButton Icon="Remote" Label="Verbinden"/>
+            <AppBarButton Icon="Remote" Label="Verbinden" Command="{Binding ConnectToDeviceCommand}"/>
             <AppBarButton Icon="Add" Label="Neues Gerät koppeln"/>
         </CommandBar>
     </Page.TopAppBar>
@@ -19,7 +19,6 @@
         <StackPanel>
             <TextBlock Text="Please select vehicle:"/>
             <ListBox ItemsSource="{Binding Devices}" SelectedItem="{Binding SelectedDevice,Mode=TwoWay}"></ListBox>
-            <Button Command="{Binding ConnectToDeviceCommand}" Content="Button" HorizontalAlignment="Stretch" VerticalAlignment="Stretch"/>
         </StackPanel>
     </Grid>
 </Page>
