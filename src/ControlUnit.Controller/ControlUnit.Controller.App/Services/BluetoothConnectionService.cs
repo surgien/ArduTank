@@ -161,11 +161,34 @@ namespace ControlUnit.Controller.App.Services
             {
                 if (_txCharacteristic != null)
                 {
-                    var buffer = data.AsBuffer();
-                    var result = await _txCharacteristic.WriteValueAsync(buffer, GattWriteOption.WriteWithoutResponse);
+                    var step = 20;
+                    var rest = data.Count() % step;
+                    var iterations = (data.Count() - rest) / step;
+
+                    for (int i = 0; i < iterations; i++)
+                    {
+                        var segment = new ArraySegment<byte>(data, i * step, step);
+                        await SendData(data, segment.ToArray());
+                    }
+
+                    if (rest > 0)
+                    {
+                        var segment = new ArraySegment<byte>(data, iterations * step, rest);
+                        await SendData(data, segment.ToArray());
+                    }
                 }
             }
             catch (Exception) { }
+        }
+
+        private async Task SendData(byte[] data, byte[] segment)
+        {
+            var writer = new DataWriter();
+
+            writer.WriteBytes(segment);
+
+            var buffer = data.AsBuffer();
+            var result = await _txCharacteristic.WriteValueAsync(writer.DetachBuffer()); //, GattWriteOption.WriteWithoutResponse
         }
 
         public async Task<IEnumerable<BluetoothDevice>> GetAllDevicesAsync()

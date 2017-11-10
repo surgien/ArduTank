@@ -5,12 +5,13 @@ using ControlUnit.Controller.Core.Services;
 using GalaSoft.MvvmLight;
 using System.Threading.Tasks;
 using GalaSoft.MvvmLight.Command;
+using System.Diagnostics;
 
 namespace ControlUnit.Controller.Core.ViewModels
 {
     public class ControllerViewModel : ViewModelBase
     {
-        private const double SPEED_TOLERANCE = 20;
+        private const double SPEED_TOLERANCE = 0;
         private const int PROPERTY_DELAY_VALUE = 20;
         private RemoteCommunicationService<IControllerService> _deviceService;
         public RelayCommand AccelerateCommand { get; private set; }
@@ -20,7 +21,7 @@ namespace ControlUnit.Controller.Core.ViewModels
         {
             AccelerateCommand = new RelayCommand(() => { OverallTrackVelocity += 1; });
             BreakCommand = new RelayCommand(() => { OverallTrackVelocity -= 1; });
-            
+
             _deviceService = container.Resolve<RemoteCommunicationService<IControllerService>>();
             //await  _service.CallRemoteProcedureAsync(srv => srv.Test(25,"aaa",444));
         }
@@ -41,13 +42,18 @@ namespace ControlUnit.Controller.Core.ViewModels
                     _isLeftTrackVelocityLocked = true;
                     if (Set(ref _leftTrackVelocity, value) && OverallTrackVelocity != 0 && !LockedTurn)
                     {
-                        Set(nameof(RightTrackVelocity), ref _rightTrackVelocity, OverallTrackVelocity);
+                        DriveLeft(value);
+                        if (Set(nameof(RightTrackVelocity), ref _rightTrackVelocity, OverallTrackVelocity))
+                        {
+                            DriveRight(RightTrackVelocity);
+                        }
                     }
                     Func<Task> delay = async () =>
                     {
                         await Task.Delay(PROPERTY_DELAY_VALUE);
                         _isLeftTrackVelocityLocked = false;
                         Set(nameof(LeftTrackVelocity), ref _leftTrackVelocity, _currentLeftTrackVelocity);
+                        if (_currentLeftTrackVelocity != _leftTrackVelocity) DriveLeft(_currentLeftTrackVelocity);
                     };
                     delay();
                 }
@@ -67,13 +73,18 @@ namespace ControlUnit.Controller.Core.ViewModels
                     _isRightTrackVelocityLocked = true;
                     if (Set(ref _rightTrackVelocity, value) && OverallTrackVelocity != 0 && !LockedTurn)
                     {
-                        Set(nameof(LeftTrackVelocity), ref _leftTrackVelocity, OverallTrackVelocity);
+                        DriveRight(value);
+                        if (Set(nameof(LeftTrackVelocity), ref _leftTrackVelocity, OverallTrackVelocity))
+                        {
+                            DriveLeft(LeftTrackVelocity);
+                        }
                     }
                     Func<Task> delay = async () =>
                     {
                         await Task.Delay(PROPERTY_DELAY_VALUE);
                         _isRightTrackVelocityLocked = false;
                         Set(nameof(RightTrackVelocity), ref _rightTrackVelocity, _currentRightTrackVelocity);
+                        if (_currentRightTrackVelocity != _rightTrackVelocity) DriveRight(_currentRightTrackVelocity);
                     };
                     delay();
                 }
@@ -93,18 +104,41 @@ namespace ControlUnit.Controller.Core.ViewModels
                     _isOverallTrackVelocityLocked = true;
                     if (Set(ref _overallTrackVelocity, value))
                     {
-                        RightTrackVelocity = value;
-                        LeftTrackVelocity = value;
+                        DriveForward(value);
+                        Set(nameof(RightTrackVelocity), ref _rightTrackVelocity, value);
+                        Set(nameof(LeftTrackVelocity), ref _leftTrackVelocity, value);
                     }
                     Func<Task> delay = async () =>
                     {
                         await Task.Delay(PROPERTY_DELAY_VALUE);
                         _isOverallTrackVelocityLocked = false;
                         OverallTrackVelocity = _currentOverallTrackVelocity;
+                        if (_currentOverallTrackVelocity != _overallTrackVelocity) DriveForward(_currentOverallTrackVelocity);
                     };
                     delay();
                 }
             }
+        }
+
+        private async void DriveLeft(double value)
+        {
+            value = AddTolerance(value);
+            await _deviceService.CallRemoteProcedureAsync(srv => srv.AccelerateLeftTrack(value));
+            Debug.WriteLine("Links auf: " + value);
+        }
+
+        private async void DriveForward(double value)
+        {
+            value = AddTolerance(value);
+            await _deviceService.CallRemoteProcedureAsync(srv => srv.Accelerate(value));
+            Debug.WriteLine("Beschleunige auf: " + value);
+        }
+
+        private async void DriveRight(double value)
+        {
+            value = AddTolerance(value);
+            await _deviceService.CallRemoteProcedureAsync(srv => srv.AccelerateRightTrack(value));
+            Debug.WriteLine("Rechts auf: " + value);
         }
 
         private bool _lockedTurn = false;
@@ -117,25 +151,6 @@ namespace ControlUnit.Controller.Core.ViewModels
         {
             RightTrackVelocity = OverallTrackVelocity;
             LeftTrackVelocity = OverallTrackVelocity;
-        }
-
-        public override async void RaisePropertyChanged([CallerMemberName] string propertyName = null)
-        {
-            base.RaisePropertyChanged(propertyName);
-
-            switch (propertyName)
-            {
-                case nameof(LeftTrackVelocity):
-                    var valL = AddTolerance(LeftTrackVelocity);
-                    await _deviceService.CallRemoteProcedureAsync(srv => srv.AccelerateLeftTrack(valL));
-                    break;
-                case nameof(RightTrackVelocity):
-                    var valR = AddTolerance(RightTrackVelocity);
-                    await _deviceService.CallRemoteProcedureAsync(srv => srv.AccelerateRightTrack(valR));
-                    break;
-                default:
-                    break;
-            }
         }
 
         private double AddTolerance(double velocity)

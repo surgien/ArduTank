@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace ControlUnit.Controller.Core.Services
@@ -31,6 +32,7 @@ namespace ControlUnit.Controller.Core.Services
     {
         private IRemoteCommunicationFormatProvider _formatProvider;
         private IBluetoothConnectionService _connection;
+        private SemaphoreSlim _semaphoreSlim = new SemaphoreSlim(1);
 
         public RemoteCommunicationService(IRemoteCommunicationFormatProvider formatProvider, IBluetoothConnectionService srv)
         {
@@ -45,39 +47,48 @@ namespace ControlUnit.Controller.Core.Services
         /// <param name="proc">The target remote procedure</param>
         public async Task CallRemoteProcedureAsync(Expression<Action<IControllerService>> proc)
         {
-            var expr = proc.Body as MethodCallExpression;
-            var method = expr.Method;
-            var paramInfos = expr.Method.GetParameters();
-            var parameters = new Dictionary<string, object>();
+            await _semaphoreSlim.WaitAsync();
 
-            for (int i = 0; i < paramInfos.Length; i++)
+            try
             {
-                switch (expr.Arguments[i])
+                var expr = proc.Body as MethodCallExpression;
+                var method = expr.Method;
+                var paramInfos = expr.Method.GetParameters();
+                var parameters = new Dictionary<string, object>();
+
+                for (int i = 0; i < paramInfos.Length; i++)
                 {
-                    case ConstantExpression constantExpr:
-                        parameters.Add(paramInfos[i].Name, constantExpr.Value);
-                        break;
-                    case MemberExpression memberExpr:
+                    switch (expr.Arguments[i])
+                    {
+                        case ConstantExpression constantExpr:
+                            parameters.Add(paramInfos[i].Name, constantExpr.Value);
+                            break;
+                        case MemberExpression memberExpr:
 
-                        var objectMember = Expression.Convert(memberExpr, typeof(object));
-                        var getterLambda = Expression.Lambda<Func<object>>(objectMember);
-                        var getter = getterLambda.Compile();
-                        var value = getter();
+                            var objectMember = Expression.Convert(memberExpr, typeof(object));
+                            var getterLambda = Expression.Lambda<Func<object>>(objectMember);
+                            var getter = getterLambda.Compile();
+                            var value = getter();
 
-                        parameters.Add(paramInfos[i].Name, value);
-                        break;
+                            parameters.Add(paramInfos[i].Name, value);
+                            break;
+                    }
                 }
+
+                var requestObject = _formatProvider.BuildRequestObject(method, parameters);
+                var requestJson = JsonConvert.SerializeObject(requestObject);
+
+
+                var x = Guid.NewGuid().ToString().Count();
+
+                //await _connection.TransmitData(ToBytes("12345678912345678912"));
+
+                await _connection.TransmitData(ToBytes(requestJson));
             }
-
-            var requestObject = _formatProvider.BuildRequestObject(method, parameters);
-            var requestJson = JsonConvert.SerializeObject(requestObject);
-
-
-            var x = Guid.NewGuid().ToString().Count();
-
-            await _connection.TransmitData(ToBytes("12345678912345678912"));
-
-            //await _connection.TransmitData(ToBytes(requestJson));
+            finally
+            {
+                _semaphoreSlim.Release();
+            }
         }
 
         /// <summary>
