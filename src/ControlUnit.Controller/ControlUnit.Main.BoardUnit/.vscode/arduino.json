@@ -1,5 +1,5 @@
 {
-    "sketch": "Main.ino",
+    "sketch": "Main\\Main.ino",
     "board": "arduino:nrf52:primo",
     "output": "bin",
     "port": "COM4"

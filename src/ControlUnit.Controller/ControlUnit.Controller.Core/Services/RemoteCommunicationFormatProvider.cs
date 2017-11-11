@@ -20,9 +20,13 @@ namespace ControlUnit.Controller.Core.Services
             {
                 serializableParams.Add($"{param.Key}: {param.Value}");
                 sb.Append(param.Value + ",");
+                if (param.Value.ToString().Contains(")") || param.Value.ToString().Contains("(") || param.Value.ToString().Contains(","))
+                {
+                    throw new ArgumentException("Wert darf keine Klammern und Komma enthalten!");
+                }
             }
 
-            var request = $"<TX>{method.Name}({sb.ToString().TrimEnd(',')})</TX>";
+            var request = $"{method.Name}({sb.ToString().TrimEnd(',')})";
             return request;
             //return new { Method = method.Name, Params = serializableParams };
         }
