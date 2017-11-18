@@ -6,13 +6,14 @@ using GalaSoft.MvvmLight;
 using System.Threading.Tasks;
 using GalaSoft.MvvmLight.Command;
 using System.Diagnostics;
+using System.Threading;
 
 namespace ControlUnit.Controller.Core.ViewModels
 {
     public class ControllerViewModel : ViewModelBase
     {
-        private const double SPEED_TOLERANCE = 0;
-        private const int PROPERTY_DELAY_VALUE = 20;
+        private const double SPEED_TOLERANCE = 10;
+        private const int PROPERTY_DELAY_VALUE = 30;
         private RemoteCommunicationService<IControllerService> _deviceService;
         public RelayCommand AccelerateCommand { get; private set; }
         public RelayCommand BreakCommand { get; private set; }
@@ -40,7 +41,7 @@ namespace ControlUnit.Controller.Core.ViewModels
                 if (!_isLeftTrackVelocityLocked)
                 {
                     _isLeftTrackVelocityLocked = true;
-                    if (Set(ref _leftTrackVelocity, value) && OverallTrackVelocity != 0 && !LockedTurn)
+                    if (Set(ref _leftTrackVelocity, value) && OverallTrackVelocity != 0)
                     {
                         DriveLeft(value);
                         if (Set(nameof(RightTrackVelocity), ref _rightTrackVelocity, OverallTrackVelocity))
@@ -71,7 +72,7 @@ namespace ControlUnit.Controller.Core.ViewModels
                 if (!_isRightTrackVelocityLocked)
                 {
                     _isRightTrackVelocityLocked = true;
-                    if (Set(ref _rightTrackVelocity, value) && OverallTrackVelocity != 0 && !LockedTurn)
+                    if (Set(ref _rightTrackVelocity, value) && OverallTrackVelocity != 0)
                     {
                         DriveRight(value);
                         if (Set(nameof(LeftTrackVelocity), ref _leftTrackVelocity, OverallTrackVelocity))
@@ -123,7 +124,7 @@ namespace ControlUnit.Controller.Core.ViewModels
         private async void DriveLeft(double value)
         {
             value = AddTolerance(value);
-            await _deviceService.CallRemoteProcedureAsync(srv => srv.AccelerateLeftTrack(value));
+            await _deviceService.CallRemoteProcedureAsync(srv => srv.TurnLeft(value));
             Debug.WriteLine("Links auf: " + value);
         }
 
@@ -137,7 +138,7 @@ namespace ControlUnit.Controller.Core.ViewModels
         private async void DriveRight(double value)
         {
             value = AddTolerance(value);
-            await _deviceService.CallRemoteProcedureAsync(srv => srv.AccelerateRightTrack(value));
+            await _deviceService.CallRemoteProcedureAsync(srv => srv.TurnRight(value));
             Debug.WriteLine("Rechts auf: " + value);
         }
 
@@ -155,10 +156,22 @@ namespace ControlUnit.Controller.Core.ViewModels
 
         private double AddTolerance(double velocity)
         {
+            var isBackward = velocity < 0;
+            if (isBackward)
+            {
+                velocity *= -1;
+            }
             if (velocity == 0) return 0;
             var result = Math.Round((((100 - SPEED_TOLERANCE) / 100) * velocity) + SPEED_TOLERANCE, 2);
 
-            return result;
+            if (isBackward)
+            {
+                return result *= -1;
+            }
+            else
+            {
+                return result;
+            }
         }
     }
 }
