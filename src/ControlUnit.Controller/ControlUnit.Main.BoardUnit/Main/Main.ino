@@ -12,8 +12,8 @@ Adafruit_MotorShield AFMS = Adafruit_MotorShield();
 // Adafruit_MotorShield AFMS = Adafruit_MotorShield(0x61); 
 
 // Select which 'port' M1, M2, M3 or M4. In this case, M1
-Adafruit_DCMotor *leftMotor = AFMS.getMotor(1);
-Adafruit_DCMotor *rightMotor = AFMS.getMotor(2);
+Adafruit_DCMotor *leftMotor = AFMS.getMotor(2);
+Adafruit_DCMotor *rightMotor = AFMS.getMotor(1);
 // You can also make another motor on port M2
 //Adafruit_DCMotor *myOtherMotor = AFMS.getMotor(2);
 
@@ -28,15 +28,6 @@ void setup() {
   bleSerial.begin();
   AFMS.begin();  // create with the default frequency 1.6KHz
   //AFMS.begin(1000);  // OR with a different frequency, say 1KHz
-  // leftMotor->setSpeed(150);
-  // rightMotor->setSpeed(150);
-
-  // // Set the speed to start, from 0 (off) to 255 (max speed)
-  // leftMotor->run(FORWARD);
-  // rightMotor->run(FORWARD);
-  // // turn on motor
-  // leftMotor->run(RELEASE);
-  // rightMotor->run(RELEASE);
 }
 
 void loop() {
@@ -72,12 +63,15 @@ void forward() {
     while ((val = bleSerial.read()) > 0)
     {
       char c =(char)val;
-      // Serial.write(c);
+      Serial.write(c);
       inputValue[i]=c;
       i++;
     }
+
     if (i>0)
     {
+      Serial.println();
+      Serial.println();
       // inputValue[i]=0; //Evtl. null terminator
       char parsedValue[i];
       containsEnd=false;
@@ -92,36 +86,7 @@ void forward() {
       
       if(containsEnd) 
       {
-        Serial.println(currentValue);
-
-        int methodEnd=currentValue.indexOf('(');
-        String methodName=currentValue.substring(1,methodEnd);
-        String paramValue=currentValue.substring(methodEnd+1,currentValue.indexOf(')'));
-        float param = paramValue.toFloat();
-
-        Serial.print("Methode: ");
-        Serial.println(methodName);
-        
-        Serial.print("Parameter: ");
-        Serial.print(param);
-        Serial.println(paramValue);
-
-        if(methodName == "Accelerate")  Accelerate(param);
-        else if(methodName == "AccelerateLeftTrack") AccelerateLeftTrack(param);
-        else if(methodName == "AccelerateRightTrack") AccelerateRightTrack(param);
-
-        // switch (methodName) {
-        //   case "Accelerate":
-        //     Accelerate(33.3);
-        //     break;
-        //   case "AccelerateLeftTrack":
-        //     AccelerateLeftTrack(33.3);
-        //     break;
-        //   case "AccelerateRightTrack":
-        //     AccelerateRightTrack(33.3);
-        //     break;
-        // }
-
+        ParseValue(currentValue);
         currentValue="";
       }
       else{
@@ -131,23 +96,85 @@ void forward() {
   }
 }
 
+void ParseValue(String value)
+{
+  Serial.println(value);
+  int methodEnd=value.indexOf('(');
+  String methodName=value.substring(0,methodEnd);
+  String paramValue=value.substring(methodEnd+1,value.indexOf(')'));
+  float param = paramValue.toFloat();
+
+  Serial.print("Methode: ");
+  Serial.println(methodName);
+  
+  Serial.print("Parameter: ");
+  Serial.println(param);
+
+  if(methodName == "Accelerate")  Accelerate(param);
+  else if(methodName == "TurnLeft") AccelerateLeftTrack(param);
+  else if(methodName == "TurnRight") AccelerateRightTrack(param);
+
+  // switch (methodName) {
+  //   case "Accelerate":
+  //     Accelerate(33.3);
+  //     break;
+  //   case "AccelerateLeftTrack":
+  //     AccelerateLeftTrack(33.3);
+  //     break;
+  //   case "AccelerateRightTrack":
+  //     AccelerateRightTrack(33.3);
+  //     break;
+  // }
+
+  value.remove(0,value.indexOf(')')+1);
+
+  if(value.length() > 3 && value.indexOf('(') != -1 &&value.indexOf(')') != -1) ParseValue(value);
+}
+
 void Accelerate(float value)
 {
-  leftMotor->run(FORWARD);
-  rightMotor->run(FORWARD);
-  int val=(254/100)*value;
+  if(value <0)
+  {
+    leftMotor->run(FORWARD);
+    rightMotor->run(FORWARD);
+    value*=-1;
+  }
+  else{
+    leftMotor->run(BACKWARD);
+    rightMotor->run(BACKWARD);
+  }
+  int val=(254.0/100.0)*value;
+
   leftMotor->setSpeed(val);
   rightMotor->setSpeed(val);
 }
 
 void AccelerateLeftTrack(float value)
 {
-  leftMotor->run(FORWARD);
-  leftMotor->setSpeed((254/100)*value);
+  if(value <0)
+  {
+    leftMotor->run(FORWARD);
+    rightMotor->run(FORWARD);
+    value*=1;
+  }
+  else{
+    leftMotor->run(BACKWARD);
+    rightMotor->run(BACKWARD);
+  }
+  leftMotor->setSpeed((254.0/100.0)*value);
 }
 
 void AccelerateRightTrack(float value)
 {
-  rightMotor->run(FORWARD);
-  rightMotor->setSpeed((254/100)*value);
+  if(value <0)
+  {
+    leftMotor->run(FORWARD);
+    rightMotor->run(FORWARD);
+    value*=1;
+  }
+  else{
+    leftMotor->run(BACKWARD);
+    rightMotor->run(BACKWARD);
+  }
+  rightMotor->setSpeed((254.0/100.0)*value);
 }
