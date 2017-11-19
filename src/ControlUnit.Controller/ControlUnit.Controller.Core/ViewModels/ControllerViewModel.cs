@@ -53,8 +53,11 @@ namespace ControlUnit.Controller.Core.ViewModels
                     {
                         await Task.Delay(PROPERTY_DELAY_VALUE);
                         _isLeftTrackVelocityLocked = false;
-                        Set(nameof(LeftTrackVelocity), ref _leftTrackVelocity, _currentLeftTrackVelocity);
-                        if (_currentLeftTrackVelocity != _leftTrackVelocity) DriveLeft(_currentLeftTrackVelocity);
+                        if (_leftTrackVelocity != _currentLeftTrackVelocity)
+                        {
+                            Set(nameof(LeftTrackVelocity), ref _leftTrackVelocity, _currentLeftTrackVelocity);
+                            DriveLeft(_currentLeftTrackVelocity);
+                        }
                     };
                     delay();
                 }
@@ -84,8 +87,11 @@ namespace ControlUnit.Controller.Core.ViewModels
                     {
                         await Task.Delay(PROPERTY_DELAY_VALUE);
                         _isRightTrackVelocityLocked = false;
-                        Set(nameof(RightTrackVelocity), ref _rightTrackVelocity, _currentRightTrackVelocity);
-                        if (_currentRightTrackVelocity != _rightTrackVelocity) DriveRight(_currentRightTrackVelocity);
+                        if (_currentRightTrackVelocity != _rightTrackVelocity)
+                        {
+                            Set(nameof(RightTrackVelocity), ref _rightTrackVelocity, _currentRightTrackVelocity);
+                            DriveRight(_currentRightTrackVelocity);
+                        }
                     };
                     delay();
                 }
