@@ -107,8 +107,8 @@ void forward() {
         Serial.println(paramValue);
 
         if(methodName == "Accelerate")  Accelerate(param);
-        else if(methodName == "AccelerateLeftTrack") AccelerateLeftTrack(param);
-        else if(methodName == "AccelerateRightTrack") AccelerateRightTrack(param);
+        else if(methodName == "TurnLeft") AccelerateLeftTrack(param);
+        else if(methodName == "TurnRight") AccelerateRightTrack(param);
 
         // switch (methodName) {
         //   case "Accelerate":
