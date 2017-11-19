@@ -75,15 +75,9 @@ namespace ControlUnit.Controller.Core.Services
                     }
                 }
 
-                var requestObject = _formatProvider.BuildRequestObject(method, parameters);
-                var requestJson = JsonConvert.SerializeObject(requestObject);
+                var requestObject = _formatProvider.BuildRequestObject(method, parameters).ToString();
 
-
-                var x = Guid.NewGuid().ToString().Count();
-
-                //await _connection.TransmitData(ToBytes("12345678912345678912"));
-
-                await _connection.TransmitData(ToBytes(requestJson));
+                await _connection.TransmitData(ToBytes(requestObject));
             }
             finally
             {

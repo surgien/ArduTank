@@ -86,7 +86,40 @@ void forward() {
       
       if(containsEnd) 
       {
+<<<<<<< HEAD
         ParseValue(currentValue);
+=======
+        Serial.println(currentValue);
+
+        int methodEnd=currentValue.indexOf('(');
+        String methodName=currentValue.substring(1,methodEnd);
+        String paramValue=currentValue.substring(methodEnd+1,currentValue.indexOf(')'));
+        float param = paramValue.toFloat();
+
+        Serial.print("Methode: ");
+        Serial.println(methodName);
+        
+        Serial.print("Parameter: ");
+        Serial.print(param);
+        Serial.println(paramValue);
+
+        if(methodName == "Accelerate")  Accelerate(param);
+        else if(methodName == "TurnLeft") AccelerateLeftTrack(param);
+        else if(methodName == "TurnRight") AccelerateRightTrack(param);
+
+        // switch (methodName) {
+        //   case "Accelerate":
+        //     Accelerate(33.3);
+        //     break;
+        //   case "AccelerateLeftTrack":
+        //     AccelerateLeftTrack(33.3);
+        //     break;
+        //   case "AccelerateRightTrack":
+        //     AccelerateRightTrack(33.3);
+        //     break;
+        // }
+
+>>>>>>> 3d1dc75be4296d09bad1f2c767b41532f9c78a74
         currentValue="";
       }
       else{

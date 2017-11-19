@@ -22,27 +22,15 @@
         void Accelerate(double value);
 
         /// <summary>
-        /// Drives to left
-        /// </summary>
-        /// <param name="value">0-100%</param>
-        void TurnLeft(double value);
-
-        /// <summary>
-        /// Drives to right
-        /// </summary>
-        /// <param name="value">0-100%</param>
-        void TurnRight(double value);
-
-        /// <summary>
         /// Controls direct speed of right track
         /// </summary>
         /// <param name="value"></param>
-        void AccelerateRightTrack(double value);
+        void TurnRight(double value);
 
         /// <summary>
         /// Controls direct speed of left track
         /// </summary>
         /// <param name="value"></param>
-        void AccelerateLeftTrack(double value);
+        void TurnLeft(double value);
     }
 }
