@@ -63,15 +63,15 @@ void forward() {
     while ((val = bleSerial.read()) > 0)
     {
       char c =(char)val;
-      Serial.write(c);
+      // Serial.write(c);
       inputValue[i]=c;
       i++;
     }
 
     if (i>0)
     {
-      Serial.println();
-      Serial.println();
+      // Serial.println();
+      // Serial.println();
       // inputValue[i]=0; //Evtl. null terminator
       char parsedValue[i];
       containsEnd=false;
@@ -86,40 +86,7 @@ void forward() {
       
       if(containsEnd) 
       {
-<<<<<<< HEAD
         ParseValue(currentValue);
-=======
-        Serial.println(currentValue);
-
-        int methodEnd=currentValue.indexOf('(');
-        String methodName=currentValue.substring(1,methodEnd);
-        String paramValue=currentValue.substring(methodEnd+1,currentValue.indexOf(')'));
-        float param = paramValue.toFloat();
-
-        Serial.print("Methode: ");
-        Serial.println(methodName);
-        
-        Serial.print("Parameter: ");
-        Serial.print(param);
-        Serial.println(paramValue);
-
-        if(methodName == "Accelerate")  Accelerate(param);
-        else if(methodName == "TurnLeft") AccelerateLeftTrack(param);
-        else if(methodName == "TurnRight") AccelerateRightTrack(param);
-
-        // switch (methodName) {
-        //   case "Accelerate":
-        //     Accelerate(33.3);
-        //     break;
-        //   case "AccelerateLeftTrack":
-        //     AccelerateLeftTrack(33.3);
-        //     break;
-        //   case "AccelerateRightTrack":
-        //     AccelerateRightTrack(33.3);
-        //     break;
-        // }
-
->>>>>>> 3d1dc75be4296d09bad1f2c767b41532f9c78a74
         currentValue="";
       }
       else{
@@ -131,7 +98,7 @@ void forward() {
 
 void ParseValue(String value)
 {
-  Serial.println(value);
+  // Serial.println(value);
   int methodEnd=value.indexOf('(');
   String methodName=value.substring(0,methodEnd);
   String paramValue=value.substring(methodEnd+1,value.indexOf(')'));
@@ -166,11 +133,12 @@ void ParseValue(String value)
 
 void Accelerate(float value)
 {
+  value*=-1;
   if(value <0)
   {
     leftMotor->run(FORWARD);
     rightMotor->run(FORWARD);
-    value*=-1;
+    // value*=-1;
   }
   else{
     leftMotor->run(BACKWARD);
@@ -184,11 +152,12 @@ void Accelerate(float value)
 
 void AccelerateLeftTrack(float value)
 {
+  value*=-1;
   if(value <0)
   {
     leftMotor->run(FORWARD);
     rightMotor->run(FORWARD);
-    value*=1;
+    // value*=1;
   }
   else{
     leftMotor->run(BACKWARD);
@@ -199,11 +168,12 @@ void AccelerateLeftTrack(float value)
 
 void AccelerateRightTrack(float value)
 {
+  value*=-1;
   if(value <0)
   {
     leftMotor->run(FORWARD);
     rightMotor->run(FORWARD);
-    value*=1;
+    // value*=1;
   }
   else{
     leftMotor->run(BACKWARD);
